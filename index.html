@@ -174,7 +174,7 @@ function endRound(winner){winner.win=true;const w=winner===F1?0:1;wins[w]++;msg=
  setTimeout(()=>{if(story.on&&w===0&&wins[w]>=2&&story.n<story.opp.length-1){story.n++;startStage();return}if(wins[w]>=2){mode='over';msg=net.on?'FIM DE JOGO':(w===0?(story.on?'VOCÊ ZEROU A HISTÓRIA!':'CAMPEÃO!'):'GAME OVER');msgT=9999}else{round++;newRound()}},1800);mode='between'}
 function update(){
  if(net.on)pullRemote();
- if(net.on&&net.role==='guest'){tick++;sendKeys();ui();return}
+ if(net.on&&net.role==='guest'){tick++;sendKeys();smoothGuest();ui();return}
  if(mode==='fight'){step(F1,F2);step(F2,F1);stepShots();
   if(F1.act!=='ko'&&F2.act!=='ko'){const d=F2.x-F1.x,m=30;if(Math.abs(d)<m&&F1.y===0&&F2.y===0&&F1.act!=='special'&&F2.act!=='special'){const p=(m-Math.abs(d))/2,s=d>=0?1:-1;F1.x-=p*s;F2.x+=p*s}}
   if(++tick%60===0&&--timer<=0){timer=0;const w=F1.hp>=F2.hp?F1:F2;F1===w?F2.hp=0:F1.hp=0;(w===F1?F2:F1).act='ko';endRound(w)}}
@@ -353,8 +353,9 @@ function onState(d){let s;try{s=JSON.parse(d)}catch(_){return}
  if(s.g<net.exp)return;
  mode=s.m;timer=s.tm;round=s.r;wins=s.w;msg=s.s;msgT=s.st;flash=s.fl;if(bgIdx!==s.b||!bg){bgIdx=s.b;bg=BG[bgIdx]}
  s.f.forEach((a,n)=>{let F=n?F2:F1;if(!F||F.i!==a[0]){F=mk(a[0],0,1,false);if(n)F2=F;else F1=F}
-  F.x=a[1];F.y=a[2];F.face=a[3];F.hp=a[4];F.pw=a[5];F.act=a[6];F.t=a[7];F.crouch=!!a[8];F.wt=a[9];F.win=!!a[10];F.kt=a[11];F.alt=!!a[12]});
+  if(mode==='fight'&&F.sx!==undefined&&Math.abs(F.x-a[1])<70){F.tx=a[1];F.ty=a[2]}else{F.x=a[1];F.y=a[2];F.tx=a[1];F.ty=a[2]}F.sx=1;F.face=a[3];F.hp=a[4];F.pw=a[5];F.act=a[6];F.t=a[7];F.crouch=!!a[8];F.wt=a[9];F.win=!!a[10];F.kt=a[11];F.alt=!!a[12]});
  shots=s.sh.map(a=>({x:a[0],y:a[1],vx:a[2],col:a[3]}))}
+function smoothGuest(){for(const F of [F1,F2]){if(F&&F.tx!==undefined){F.x+=(F.tx-F.x)*.35;F.y+=(F.ty-F.y)*.35;if(Math.abs(F.tx-F.x)<.1)F.x=F.tx;if(Math.abs(F.ty-F.y)<.1)F.y=F.ty}}for(const s of shots)s.x+=s.vx}
 $('bSolo').onclick=()=>{netClose();story.on=false;showView(null);mode='select'};
 $('bStory').onclick=()=>{netClose();story.on=true;showView(null);mode='select'};
 $('bOnline').onclick=()=>{story.on=false;netClose();onlineView()};
